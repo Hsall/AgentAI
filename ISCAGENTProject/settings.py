@@ -45,7 +45,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 # Liste séparée par des virgules, ex : DJANGO_ALLOWED_HOSTS=monsite.fr,www.monsite.fr
 ALLOWED_HOSTS = [
     hote.strip()
-    for hote in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+    for hote in os.environ.get('DJANGO_ALLOWED_HOSTS', 'iscagentbyhady.onrender.com').split(',')
     if hote.strip()
 ]
 
