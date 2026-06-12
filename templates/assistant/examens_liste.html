@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block titre %}Examens blancs{% endblock %}
+
+{% block contenu %}
+<div class="bonjour">
+  <h1>Examens <span class="souligne">blancs</span></h1>
+  <p>Boussole rédige une épreuve à partir des supports du cours, vous la passez en temps limité, elle corrige.</p>
+</div>
+
+<div class="colonnes colonnes-tiers">
+  <div class="carte">
+    <span class="etiquette">Carnet de notes</span>
+    <h2>Vos épreuves passées</h2>
+    {% if simulations %}
+      <table class="registre">
+        <tr><th>Cours</th><th>Date</th><th>Note</th><th></th></tr>
+        {% for s in simulations %}
+        <tr>
+          <td>{{ s.cours.intitule }} <span style="color:var(--encre-pale)">({{ s.cours.code }})</span></td>
+          <td>{{ s.commencee_le|date:"j N Y, H\hi" }}</td>
+          <td>
+            {% if s.est_terminee %}
+              <b style="color:{% if s.note_sur_20 >= 10 %}var(--sauge){% else %}var(--rouille){% endif %};">
+                {{ s.note_sur_20 }}/20</b>
+            {% else %}
+              <em>en cours</em>
+            {% endif %}
+          </td>
+          <td>
+            {% if s.est_terminee %}
+              <a href="{% url 'assistant:resultat_simulation' s.pk %}">voir la copie</a>
+            {% else %}
+              <a href="{% url 'assistant:passer_simulation' s.pk %}">reprendre</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>Aucune épreuve pour l'instant. <span class="manuscrit">le premier essai ne compte pas, promis</span></p>
+    {% endif %}
+  </div>
+
+  <div class="carte penchee-d">
+    <span class="etiquette rouille">Nouvelle épreuve</span>
+    <h2>Se lancer</h2>
+    <form method="post" action="{% url 'assistant:demarrer_simulation' %}">
+      {% csrf_token %}
+      <div class="champ">
+        <label for="cours_id">Matière</label>
+        <select name="cours_id" id="cours_id" required>
+          {% for c in cours_disponibles %}
+            <option value="{{ c.pk }}">{{ c.code }} — {{ c.intitule }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label for="nombre_questions">Nombre de questions</label>
+        <input type="number" name="nombre_questions" id="nombre_questions"
+               min="3" max="10" value="5">
+        <p class="aide">Comptez 2 minutes par question, montre en main.</p>
+      </div>
+      <button type="submit" class="bouton rouille">Générer mon épreuve</button>
+      <p class="aide" style="margin-top:10px;">La génération prend quelques secondes — l'agent lit le cours avant de poser ses questions.</p>
+    </form>
+  </div>
+</div>
+{% endblock %}

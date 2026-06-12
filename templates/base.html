@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Boussole{% endblock %} · ISC Business School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&family=Caveat:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/isc.css' %}">
+</head>
+<body>
+
+<header class="bandeau">
+  <div class="bandeau-interieur">
+    <a class="marque" href="{% url 'assistant:tableau_de_bord' %}">
+      <b>ISC Business School</b>
+      <span>Boussole · assistant de campus</span>
+    </a>
+
+    {% if user.is_authenticated %}
+    {% with vue=request.resolver_match.view_name %}
+    <nav class="menu">
+      {% if user.est_administration %}
+        <a href="{% url 'academics:tableau' %}" class="{% if vue == 'academics:tableau' %}actif{% endif %}">Tableau de bord</a>
+        <a href="{% url 'academics:cours_liste' %}" class="{% if 'cours' in vue or 'document' in vue %}actif{% endif %}">Cours &amp; supports</a>
+        <a href="{% url 'academics:edt_liste' %}" class="{% if 'edt' in vue or 'creneau' in vue or 'examen' in vue %}actif{% endif %}">Plannings</a>
+        <a href="{% url 'assistant:chat' %}" class="{% if 'chat' in vue or 'conversation' in vue %}actif{% endif %}">Assistant</a>
+      {% else %}
+        <a href="{% url 'assistant:tableau_de_bord' %}" class="{% if vue == 'assistant:tableau_de_bord' %}actif{% endif %}">Tableau de bord</a>
+        <a href="{% url 'assistant:chat' %}" class="{% if 'chat' in vue or 'conversation' in vue %}actif{% endif %}">Assistant</a>
+        <a href="{% url 'assistant:examens_blancs' %}" class="{% if 'simulation' in vue or 'examens' in vue %}actif{% endif %}">Examens blancs</a>
+        <a href="{% url 'assistant:fiches' %}" class="{% if 'fiche' in vue %}actif{% endif %}">Fiches de révision</a>
+      {% endif %}
+    </nav>
+    {% endwith %}
+
+    <div class="profil-coin">
+      {{ user.prenom_affiche }}{% if user.niveau %} · {{ user.get_niveau_display }}{% endif %}{% if user.est_administration %} · administration{% endif %}
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="bouton discret">se déconnecter</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</header>
+
+<main class="page">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flash {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% block contenu %}{% endblock %}
+</main>
+
+<footer class="pied">
+  ISC Business School — projet pédagogique « agent IA » · Boussole tourne avec
+  <em>smolagents</em> et des modèles Hugging Face · cousu main par les étudiants, 2026
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

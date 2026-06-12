@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block titre %}Fiches de révision{% endblock %}
+
+{% block contenu %}
+<div class="bonjour">
+  <h1>Fiches de <span class="souligne">révision</span></h1>
+  <p>Générées par Boussole à partir des supports déposés par vos enseignants — pas de blabla, l'essentiel.</p>
+</div>
+
+<div class="colonnes colonnes-tiers">
+  <div>
+    {% for fiche in fiches %}
+      <div class="fiche-carte">
+        <span class="etiquette sauge">{{ fiche.cours.code }}</span>
+        <h3><a href="{% url 'assistant:fiche_detail' fiche.pk %}">{{ fiche.cours.intitule }}</a></h3>
+        <p style="font-size:.85rem;color:var(--encre-pale);margin:0;">
+          rédigée le {{ fiche.creee_le|date:"j F Y à H\hi" }}
+        </p>
+      </div>
+    {% empty %}
+      <div class="carte">
+        <p>Aucune fiche pour l'instant. <span class="manuscrit">vos futures antisèches (légales) vivront ici</span></p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div>
+    <div class="carte penchee-d">
+      <span class="etiquette rouille">Nouvelle fiche</span>
+      <h2>Générer une fiche</h2>
+      <form method="post" action="{% url 'assistant:generer_fiche' %}">
+        {% csrf_token %}
+        <div class="champ">
+          <label for="cours_id">Matière</label>
+          <select name="cours_id" id="cours_id" required>
+            {% for c in cours_disponibles %}
+              <option value="{{ c.pk }}">{{ c.code }} — {{ c.intitule }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="bouton rouille">Rédiger ma fiche</button>
+        <p class="aide" style="margin-top:10px;">Quelques secondes de patience : l'agent relit le cours en entier.</p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

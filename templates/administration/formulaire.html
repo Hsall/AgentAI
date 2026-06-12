@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block titre %}{{ titre }}{% endblock %}
+
+{% block contenu %}
+<div class="bonjour">
+  <h1>{{ titre }}</h1>
+</div>
+
+<div class="colonnes colonnes-tiers">
+  <div class="carte">
+    <form method="post" {% if fichier %}enctype="multipart/form-data"{% endif %}>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="flash error">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for champ in form %}
+        <div class="champ">
+          <label for="{{ champ.id_for_label }}">{{ champ.label }}</label>
+          {{ champ }}
+          {% if champ.help_text %}<p class="aide">{{ champ.help_text }}</p>{% endif %}
+          {% if champ.errors %}<ul class="erreurs">{% for e in champ.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="bouton rouille">Enregistrer</button>
+      <a class="bouton discret" href="{% url retour %}">annuler</a>
+    </form>
+  </div>
+
+  <div>
+    <div class="carte penchee-d">
+      <span class="etiquette sauge">le saviez-vous ?</span>
+      <p style="font-size:.92rem;">
+        Tout ce que vous enregistrez ici alimente directement l'agent :
+        un étudiant qui demande « où est mon cours de compta ? » obtient
+        la salle que vous venez de saisir.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

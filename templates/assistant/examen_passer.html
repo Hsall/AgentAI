@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block titre %}Épreuve {{ simulation.cours.code }}{% endblock %}
+
+{% block contenu %}
+<div class="minuteur" id="minuteur">{{ duree_minutes }}:00</div>
+
+<div class="bonjour">
+  <span class="tampon">épreuve blanche</span>
+  <h1 style="margin-top:14px;">{{ simulation.cours.intitule }}</h1>
+</div>
+
+<form method="post" action="{% url 'assistant:corriger_simulation' simulation.pk %}" id="copie-form">
+  {% csrf_token %}
+  <div class="copie">
+    <div class="entete-copie">
+      <b class="serif">ISC Business School</b> — contrôle d'entraînement<br>
+      <span style="font-size:.9rem;color:var(--encre-pale);">
+        Candidat : {{ user.get_full_name|default:user.username }} ·
+        {{ user.get_niveau_display }} · {{ simulation.questions|length }} questions ·
+        durée conseillée {{ duree_minutes }} min
+      </span>
+    </div>
+
+    {% for q in simulation.questions %}
+    <div class="question-bloc">
+      <p><span class="numero">{{ forloop.counter }}.</span> <b>{{ q.question }}</b></p>
+      {% for option in q.options %}
+        <label class="option">
+          <input type="radio" name="question_{{ forloop.parentloop.counter0 }}"
+                 value="{{ forloop.counter0 }}">
+          {{ option }}
+        </label>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div style="padding-left:40px;">
+      <button type="submit" class="bouton rouille"
+              onclick="return confirm('Rendre la copie ? Les questions sans réponse compteront faux.');">
+        Rendre ma copie
+      </button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  let restant = {{ duree_minutes }} * 60;
+  const minuteur = document.getElementById('minuteur');
+  const formulaire = document.getElementById('copie-form');
+
+  const tic = setInterval(function () {
+    restant -= 1;
+    const m = Math.floor(restant / 60);
+    const s = String(restant % 60).padStart(2, '0');
+    minuteur.textContent = m + ':' + s;
+    if (restant <= 60) minuteur.classList.add('urgent');
+    if (restant <= 0) {
+      clearInterval(tic);
+      alert('Temps écoulé — la copie part à la correction !');
+      formulaire.submit();
+    }
+  }, 1000);
+})();
+</script>
+{% endblock %}

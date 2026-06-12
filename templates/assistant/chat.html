@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load assistant_extras %}
+
+{% block titre %}Assistant{% endblock %}
+
+{% block contenu %}
+<div class="chat-coque">
+
+  <aside>
+    <a class="bouton creux" href="{% url 'assistant:chat' %}" style="width:100%;text-align:center;">+ Nouvelle discussion</a>
+    <div class="chat-historique" style="margin-top:14px;">
+      {% for conv in conversations %}
+        <a href="{% url 'assistant:conversation' conv.pk %}"
+           class="{% if conversation and conversation.pk == conv.pk %}actif{% endif %}">
+          {{ conv.titre }}
+          <span class="quand">{{ conv.mise_a_jour_le|date:"j N Y, H\hi" }}</span>
+        </a>
+      {% empty %}
+        <p style="font-size:.85rem;color:var(--encre-pale);padding:0 4px;">
+          Vos discussions passées s'afficheront ici.
+        </p>
+      {% endfor %}
+    </div>
+    {% if conversation %}
+    <form method="post" action="{% url 'assistant:supprimer_conversation' conversation.pk %}"
+          onsubmit="return confirm('Supprimer cette conversation ?');" style="margin-top:10px;">
+      {% csrf_token %}
+      <button type="submit" class="bouton discret">supprimer cette discussion</button>
+    </form>
+    {% endif %}
+  </aside>
+
+  <section class="fil">
+    <div class="fil-messages" id="fil-messages">
+      {% if contenu_messages %}
+        {% for m in contenu_messages %}
+          <div class="msg {% if m.objet.auteur == 'UTILISATEUR' %}de-moi{% else %}de-agent{% endif %}">
+            <div class="bulle prose">{{ m.html|safe }}</div>
+            <div class="signature">
+              {% if m.objet.auteur == 'UTILISATEUR' %}vous{% else %}Boussole{% endif %}
+              · {{ m.objet.envoye_le|date:"H\hi" }}
+            </div>
+            {% if m.objet.tools_utilises %}
+              <div class="outils">outils consultés :
+                {% for outil in m.objet.tools_utilises|split_virgule %}<code>{{ outil }}</code>{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="vide-fil">
+          <span class="tampon">à votre service</span>
+          <h2 style="margin-top:18px;">Que puis-je faire pour vous ?</h2>
+          <p>Quelques idées pour commencer :</p>
+          <p>
+            <button class="bouton creux suggestion">Quel est mon emploi du temps de demain ?</button><br><br>
+            <button class="bouton creux suggestion">Résume-moi le cours de marketing</button><br><br>
+            <button class="bouton creux suggestion">Fais-moi un quiz de 5 questions sur la comptabilité</button>
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    <form class="fil-saisie" id="formulaire-chat">
+      {% csrf_token %}
+      <input type="hidden" name="conversation_id" id="conversation-id"
+             value="{% if conversation %}{{ conversation.pk }}{% endif %}">
+      <textarea name="question" id="champ-question" required
+                placeholder="Posez votre question académique… (Entrée pour envoyer)"></textarea>
+      <button type="submit" class="bouton rouille" id="bouton-envoyer">Envoyer</button>
+    </form>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const formulaire = document.getElementById('formulaire-chat');
+  const fil = document.getElementById('fil-messages');
+  const champ = document.getElementById('champ-question');
+  const bouton = document.getElementById('bouton-envoyer');
+  const champConversation = document.getElementById('conversation-id');
+  const csrf = formulaire.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  function defiler() { fil.scrollTop = fil.scrollHeight; }
+  defiler();
+
+  function echapper(texte) {
+    const div = document.createElement('div');
+    div.textContent = texte;
+    return div.innerHTML;
+  }
+
+  function ajouterMessage(classe, html, signature, outils) {
+    const bloc = document.createElement('div');
+    bloc.className = 'msg ' + classe;
+    let suite = '<div class="bulle prose">' + html + '</div>' +
+                '<div class="signature">' + signature + '</div>';
+    if (outils && outils.length) {
+      suite += '<div class="outils">outils consultés : ' +
+        outils.map(o => '<code>' + echapper(o) + '</code>').join('') + '</div>';
+    }
+    bloc.innerHTML = suite;
+    fil.appendChild(bloc);
+    defiler();
+    return bloc;
+  }
+
+  async function envoyer(question) {
+    const vide = fil.querySelector('.vide-fil');
+    if (vide) vide.remove();
+
+    ajouterMessage('de-moi', '<p>' + echapper(question) + '</p>', 'vous · à l\'instant');
+    const attente = ajouterMessage('de-agent',
+      '<span class="agent-reflechit">Boussole consulte ses registres</span>', 'Boussole');
+
+    champ.value = '';
+    champ.disabled = true;
+    bouton.disabled = true;
+
+    const donnees = new URLSearchParams();
+    donnees.set('question', question);
+    donnees.set('conversation_id', champConversation.value);
+
+    try {
+      const reponse = await fetch("{% url 'assistant:envoyer_message' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrf,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: donnees.toString(),
+      });
+      const resultat = await reponse.json();
+      attente.remove();
+      if (!reponse.ok) {
+        ajouterMessage('de-agent', '<p>' + echapper(resultat.erreur || 'Erreur inattendue.') + '</p>', 'Boussole');
+      } else {
+        ajouterMessage('de-agent', resultat.reponse_html, 'Boussole · à l\'instant', resultat.tools);
+        if (!champConversation.value) {
+          champConversation.value = resultat.conversation_id;
+          history.replaceState(null, '',
+            "{% url 'assistant:chat' %}" + 'conversation/' + resultat.conversation_id + '/');
+        }
+      }
+    } catch (e) {
+      attente.remove();
+      ajouterMessage('de-agent', '<p>Connexion impossible au serveur. Réessayez.</p>', 'Boussole');
+    } finally {
+      champ.disabled = false;
+      bouton.disabled = false;
+      champ.focus();
+    }
+  }
+
+  formulaire.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const question = champ.value.trim();
+    if (question) envoyer(question);
+  });
+
+  champ.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      formulaire.requestSubmit();
+    }
+  });
+
+  document.querySelectorAll('.suggestion').forEach(function (b) {
+    b.addEventListener('click', function () { envoyer(b.textContent.trim()); });
+  });
+})();
+</script>
+{% endblock %}

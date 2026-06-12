@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block titre %}Résultat {{ simulation.cours.code }}{% endblock %}
+
+{% block contenu %}
+<div class="bonjour">
+  <span class="etiquette rouille">copie corrigée</span>
+  <h1>{{ simulation.cours.intitule }}</h1>
+  <p style="color:var(--encre-pale);">Épreuve du {{ simulation.commencee_le|date:"j F Y à H\hi" }}</p>
+</div>
+
+<div class="colonnes colonnes-tiers">
+  <div>
+    {% for q in detail %}
+      <div class="{% if q.correcte %}correction-ok{% else %}correction-ko{% endif %}">
+        <p><b>{{ forloop.counter }}. {{ q.question }}</b></p>
+        <p>Votre réponse : <b>{{ q.choisie_lettre }}</b> — {{ q.choisie_texte }}
+          {% if q.correcte %} ✓{% else %} ✗<br>Bonne réponse : <b>{{ q.bonne_lettre }}</b> — {{ q.bonne_texte }}{% endif %}
+        </p>
+        {% if q.explication %}<p style="font-size:.9rem;color:var(--encre-pale);">{{ q.explication }}</p>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div>
+    <div class="carte penchee-d" style="text-align:center;">
+      <span class="etiquette">verdict</span>
+      <div class="note-finale">{{ simulation.note_sur_20 }}<span style="font-size:1.6rem;">/20</span></div>
+      <p class="manuscrit" style="font-size:1.4rem;">
+        {% if simulation.note_sur_20 >= 16 %}excellente copie !{% elif simulation.note_sur_20 >= 10 %}c'est acquis, on consolide{% else %}on reprend le cours ensemble ?{% endif %}
+      </p>
+      <a class="bouton creux" href="{% url 'assistant:examens_blancs' %}">Repasser une épreuve</a>
+      <p style="margin-top:14px;font-size:.88rem;">
+        ou <a href="{% url 'assistant:chat' %}">demander à Boussole d'expliquer vos erreurs</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block titre %}Fiche {{ fiche.cours.code }}{% endblock %}
+
+{% block contenu %}
+<div class="bonjour pas-imprimer" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px;">
+  <div>
+    <span class="etiquette sauge">{{ fiche.cours.code }} · {{ fiche.cours.niveau }}</span>
+    <h1>Fiche — {{ fiche.cours.intitule }}</h1>
+    <p style="color:var(--encre-pale);margin:0;">rédigée par Boussole le {{ fiche.creee_le|date:"j F Y" }}</p>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <button class="bouton creux" onclick="window.print()">Imprimer / PDF</button>
+    <form method="post" action="{% url 'assistant:supprimer_fiche' fiche.pk %}"
+          onsubmit="return confirm('Supprimer cette fiche ?');">
+      {% csrf_token %}
+      <button type="submit" class="bouton discret">supprimer</button>
+    </form>
+  </div>
+</div>
+
+<div class="fiche-papier">
+  <div class="prose">{{ contenu_html|safe }}</div>
+</div>
+
+<p class="pas-imprimer" style="margin-top:24px;">
+  <a href="{% url 'assistant:fiches' %}">← toutes mes fiches</a>
+</p>
+{% endblock %}

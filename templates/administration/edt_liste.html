@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block titre %}Plannings{% endblock %}
+
+{% block contenu %}
+<div class="bonjour" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px;">
+  <h1>Plannings &amp; <span class="souligne">examens</span></h1>
+  <div style="display:flex;gap:10px;">
+    <a class="bouton" href="{% url 'academics:creneau_ajouter' %}">+ Créneau de cours</a>
+    <a class="bouton rouille" href="{% url 'academics:examen_ajouter' %}">+ Examen</a>
+  </div>
+</div>
+
+<div class="colonnes colonnes-2">
+  <div class="carte">
+    <span class="etiquette">Semainier</span>
+    <h2>Emploi du temps</h2>
+    <table class="registre">
+      <tr><th>Jour</th><th>Horaire</th><th>Cours</th><th>Salle</th><th></th></tr>
+      {% for c in creneaux %}
+      <tr>
+        <td>{{ c.get_jour_display }}</td>
+        <td>{{ c.heure_debut|time:"H\hi" }}–{{ c.heure_fin|time:"H\hi" }}</td>
+        <td>{{ c.cours.code }} <span style="color:var(--encre-pale);">({{ c.cours.niveau }})</span></td>
+        <td>{{ c.salle }}</td>
+        <td>
+          <form method="post" action="{% url 'academics:creneau_supprimer' c.pk %}"
+                onsubmit="return confirm('Supprimer ce créneau ?');">
+            {% csrf_token %}<button class="bouton discret" type="submit">retirer</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">Aucun créneau saisi.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="carte penchee-d">
+    <span class="etiquette rouille">Sessions</span>
+    <h2>Examens planifiés</h2>
+    <table class="registre">
+      <tr><th>Date</th><th>Épreuve</th><th>Salle</th><th></th></tr>
+      {% for e in examens %}
+      <tr>
+        <td>{{ e.date|date:"D j N Y, H\hi" }}</td>
+        <td>{{ e.get_type_examen_display }} — {{ e.cours.code }} ({{ e.cours.niveau }})</td>
+        <td>{{ e.salle }}</td>
+        <td>
+          <form method="post" action="{% url 'academics:examen_supprimer' e.pk %}"
+                onsubmit="return confirm('Supprimer cet examen ?');">
+            {% csrf_token %}<button class="bouton discret" type="submit">retirer</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4">Aucun examen planifié.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+<p class="manuscrit">tout ce qui est saisi ici, Boussole le répète fidèlement aux étudiants</p>
+{% endblock %}

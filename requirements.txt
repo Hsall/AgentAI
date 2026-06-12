@@ -1,0 +1,24 @@
+# Coeur du projet
+Django>=6.1a1
+smolagents>=1.26
+huggingface_hub>=1.19
+
+# Tools de l'agent
+pypdf>=6.0          # lecture des supports de cours PDF
+markdown>=3.10      # rendu des réponses de l'agent dans l'interface
+
+# Données de démonstration
+fpdf2>=2.8          # génération des PDF de cours d'exemple (peupler_demo)
+
+# Notebook de test (facultatif)
+# jupyter
+asgiref>=3.8.1
+sqlparse>=0.5.4
+tzdata>=2024.1
+
+# Production
+psycopg2-binary==2.9.11 # PostgreSQL driver (prod)
+dj-database-url==2.3.0  # Parses DATABASE_URL env var (Render, Heroku, Fly)
+gunicorn==25.3.0        # WSGI server for production
+whitenoise==6.12.0      # Static files serving in production
+django-jazzmin==3.0.1

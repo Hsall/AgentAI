@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% now "l j F" as date_jour %}
+
+{% block titre %}Administration{% endblock %}
+
+{% block contenu %}
+<div class="bonjour">
+  <span class="date-du-jour">{{ date_jour|capfirst }} · espace administration</span>
+  <h1>Bureau de la <span class="souligne">scolarité</span></h1>
+</div>
+
+<div class="colonnes colonnes-3" style="margin-bottom:30px;">
+  <div class="carte penchee-g" style="margin-bottom:0;">
+    <span class="etiquette">Catalogue</span>
+    <div class="stat-grande">{{ nb_cours }}</div>
+    cours · {{ nb_documents }} support{{ nb_documents|pluralize }} PDF
+  </div>
+  <div class="carte" style="margin-bottom:0;">
+    <span class="etiquette sauge">Étudiants</span>
+    <div class="stat-grande">{{ nb_etudiants }}</div>
+    comptes étudiants actifs
+  </div>
+  <div class="carte penchee-d" style="margin-bottom:0;">
+    <span class="etiquette rouille">Boussole</span>
+    <div class="stat-grande">{{ nb_conversations }}</div>
+    conversations avec l'agent
+  </div>
+</div>
+
+<div class="colonnes colonnes-2">
+  <div class="carte">
+    <span class="etiquette rouille">Sessions</span>
+    <h2>Examens à venir</h2>
+    {% if examens_a_venir %}
+      <table class="registre">
+        <tr><th>Date</th><th>Épreuve</th><th>Salle</th></tr>
+        {% for e in examens_a_venir %}
+        <tr>
+          <td>{{ e.date|date:"D j N, H\hi" }}</td>
+          <td>{{ e.get_type_examen_display }} — {{ e.cours.code }}</td>
+          <td>{{ e.salle }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>Aucune épreuve planifiée.</p>
+    {% endif %}
+    <p style="margin:14px 0 0;"><a class="bouton creux" href="{% url 'academics:examen_ajouter' %}">Planifier un examen →</a></p>
+  </div>
+
+  <div>
+    <div class="carte">
+      <span class="etiquette">Derniers supports déposés</span>
+      <ul class="liste-traits">
+        {% for d in derniers_documents %}
+          <li>{{ d.titre }} <span class="detail">· {{ d.cours.code }} · {{ d.ajoute_le|date:"j N" }}</span></li>
+        {% empty %}
+          <li>Aucun support déposé pour l'instant.</li>
+        {% endfor %}
+      </ul>
+      <p style="margin:14px 0 0;"><a class="bouton creux" href="{% url 'academics:document_ajouter' %}">Déposer un PDF →</a></p>
+    </div>
+
+    <div class="carte penchee-g">
+      <span class="etiquette sauge">Activité de révision</span>
+      <ul class="liste-traits">
+        {% for s in dernieres_simulations %}
+          <li>{{ s.etudiant.prenom_affiche }} — examen blanc {{ s.cours.code }}
+            <span class="detail">{% if s.est_terminee %}· {{ s.note_sur_20 }}/20{% else %}· en cours{% endif %}</span>
+          </li>
+        {% empty %}
+          <li>Aucun examen blanc passé pour l'instant.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

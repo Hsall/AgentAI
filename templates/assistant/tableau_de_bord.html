@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% now "l j F" as date_jour %}
+
+{% block titre %}Tableau de bord{% endblock %}
+
+{% block contenu %}
+<div class="bonjour">
+  <span class="date-du-jour">{{ date_jour|capfirst }} — campus de Paris</span>
+  <h1>Bonjour {{ user.prenom_affiche }} <span class="manuscrit">on s'y remet ?</span></h1>
+</div>
+
+<div class="colonnes colonnes-tiers">
+  <div>
+
+    <div class="carte penchee-g">
+      <span class="etiquette">Aujourd'hui</span>
+      <h2>Vos cours du jour</h2>
+      {% if creneaux_du_jour %}
+        <ul class="liste-traits">
+          {% for c in creneaux_du_jour %}
+          <li>
+            <span class="heure">{{ c.heure_debut|time:"H\hi" }} – {{ c.heure_fin|time:"H\hi" }}</span>
+            {{ c.cours.intitule }}
+            <span class="detail">· salle {{ c.salle }} · {{ c.cours.enseignant }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>Rien au planning aujourd'hui. <span class="manuscrit">jour parfait pour réviser…</span></p>
+      {% endif %}
+    </div>
+
+    <div class="carte">
+      <span class="etiquette rouille">Examens</span>
+      <h2>Prochaines épreuves ({{ user.niveau }})</h2>
+      {% if examens_a_venir %}
+        <table class="registre">
+          <tr><th>Date</th><th>Épreuve</th><th>Salle</th><th>Durée</th></tr>
+          {% for e in examens_a_venir %}
+          <tr>
+            <td>{{ e.date|date:"D j N, H\hi" }}</td>
+            <td>{{ e.get_type_examen_display }} — {{ e.cours.intitule }}</td>
+            <td>{{ e.salle }}</td>
+            <td>{{ e.duree_minutes }} min</td>
+          </tr>
+          {% endfor %}
+        </table>
+        <p style="margin-bottom:0;margin-top:14px;">
+          <a class="bouton creux" href="{% url 'assistant:examens_blancs' %}">S'entraîner avec un examen blanc →</a>
+        </p>
+      {% else %}
+        <p>Aucun examen planifié pour le moment. Profitez-en pour prendre de l'avance.</p>
+      {% endif %}
+    </div>
+
+  </div>
+  <div>
+
+    <div class="carte penchee-d">
+      <span class="etiquette sauge">Boussole</span>
+      <h2>Demandez à l'agent</h2>
+      <p style="font-size:.92rem;">Expliquer une notion, résumer un cours, vérifier une salle…</p>
+      <form action="{% url 'assistant:chat' %}" method="get">
+        <a class="bouton rouille" href="{% url 'assistant:chat' %}">Ouvrir l'assistant</a>
+      </form>
+      {% if conversations_recentes %}
+      <h3 style="margin-top:22px;">Reprendre une discussion</h3>
+      <ul class="liste-traits">
+        {% for conv in conversations_recentes %}
+        <li>
+          <a href="{% url 'assistant:conversation' conv.pk %}">{{ conv.titre }}</a>
+          <span class="detail">· {{ conv.mise_a_jour_le|date:"j N" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+
+    <div class="carte">
+      <span class="etiquette">Révisions</span>
+      <h2>Vos dernières fiches</h2>
+      {% if dernieres_fiches %}
+        <ul class="liste-traits">
+          {% for fiche in dernieres_fiches %}
+          <li><a href="{% url 'assistant:fiche_detail' fiche.pk %}">{{ fiche.cours.intitule }}</a>
+            <span class="detail">· {{ fiche.creee_le|date:"j N" }}</span></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p style="font-size:.92rem;">Pas encore de fiche. Générez-en une à partir d'un vrai support de cours.</p>
+      {% endif %}
+      <p style="margin:14px 0 0;"><a class="bouton creux" href="{% url 'assistant:fiches' %}">Mes fiches →</a></p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block titre %}Connexion{% endblock %}
+
+{% block contenu %}
+<div class="connexion-scene">
+
+  <div class="connexion-titre">
+    <span class="tampon">ISC · intranet</span>
+    <h1 style="margin-top:18px;">Boussole,<br>l'assistant <span class="souligne">de campus</span></h1>
+    <p class="grand">
+      Posez vos questions sur les cours, l'emploi du temps ou les examens.
+      Demandez un résumé, un quiz, une fiche de révision — Boussole connaît
+      les vrais documents et plannings de l'école.
+    </p>
+    <p class="manuscrit">— psst : essayez « c'est quoi mon planning de demain ? »</p>
+  </div>
+
+  <div class="carte penchee-d">
+    <span class="etiquette">Connexion</span>
+    <h2 style="margin-top:0;">Entrer dans l'école</h2>
+
+    {% if form.errors %}
+      <div class="flash error">Identifiants incorrects, réessayez.</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="champ">
+        <label for="id_username">Identifiant</label>
+        <input type="text" name="username" id="id_username" autofocus required>
+      </div>
+      <div class="champ">
+        <label for="id_password">Mot de passe</label>
+        <input type="password" name="password" id="id_password" required>
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="bouton rouille">Se connecter</button>
+    </form>
+
+    <p class="detail" style="font-size:.82rem;color:var(--encre-pale);margin-top:18px;">
+      Comptes de démonstration : <code>amine / iscdemo2026</code> (étudiant L3)
+      et <code>scolarite / iscdemo2026</code> (administration).
+    </p>
+  </div>
+
+</div>
+{% endblock %}

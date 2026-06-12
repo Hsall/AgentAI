@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block titre %}Cours et supports{% endblock %}
+
+{% block contenu %}
+<div class="bonjour" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px;">
+  <h1>Cours &amp; <span class="souligne">supports</span></h1>
+  <div style="display:flex;gap:10px;">
+    <a class="bouton" href="{% url 'academics:cours_creer' %}">+ Nouveau cours</a>
+    <a class="bouton rouille" href="{% url 'academics:document_ajouter' %}">+ Déposer un PDF</a>
+  </div>
+</div>
+
+<div class="carte">
+  <table class="registre">
+    <tr><th>Code</th><th>Intitulé</th><th>Niveau</th><th>Enseignant</th><th>Supports PDF</th><th></th></tr>
+    {% for c in liste_cours %}
+    <tr>
+      <td><b>{{ c.code }}</b></td>
+      <td>{{ c.intitule }}<br><span style="font-size:.82rem;color:var(--encre-pale);">{{ c.description|truncatechars:90 }}</span></td>
+      <td>{{ c.niveau }} · {{ c.semestre }}</td>
+      <td>{{ c.enseignant }}</td>
+      <td>
+        {% for d in c.documents.all %}
+          {{ d.titre }}
+          <form method="post" action="{% url 'academics:document_supprimer' d.pk %}" style="display:inline;"
+                onsubmit="return confirm('Supprimer ce support ?');">
+            {% csrf_token %}<button class="bouton discret" type="submit">retirer</button>
+          </form><br>
+        {% empty %}
+          <em style="color:var(--encre-pale);">aucun</em>
+        {% endfor %}
+      </td>
+      <td style="white-space:nowrap;">
+        <a href="{% url 'academics:cours_modifier' c.pk %}">modifier</a><br>
+        <form method="post" action="{% url 'academics:cours_supprimer' c.pk %}"
+              onsubmit="return confirm('Supprimer {{ c.code }} et tout ce qui s\'y rattache ?');">
+          {% csrf_token %}<button class="bouton discret" type="submit">supprimer</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Catalogue vide — créez votre premier cours.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<p class="manuscrit">les PDF déposés ici sont immédiatement lisibles par Boussole</p>
+{% endblock %}
