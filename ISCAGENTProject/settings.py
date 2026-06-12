@@ -31,12 +31,30 @@ if _env_file.exists():
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=#!@&du1l6_t(p%!^-=3r!dwq6dhgmjh%ltf@-ta0xhk5#$e_o'
+# Définie dans le fichier .env (DJANGO_SECRET_KEY) ; la valeur de secours
+# ci-dessous ne sert qu'au développement local.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-=#!@&du1l6_t(p%!^-=3r!dwq6dhgmjh%ltf@-ta0xhk5#$e_o',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DJANGO_DEBUG=0 dans le .env pour désactiver.
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = []
+# Liste séparée par des virgules, ex : DJANGO_ALLOWED_HOSTS=monsite.fr,www.monsite.fr
+ALLOWED_HOSTS = [
+    hote.strip()
+    for hote in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+    if hote.strip()
+]
+
+# Ex : DJANGO_CSRF_TRUSTED_ORIGINS=https://monsite.fr
+CSRF_TRUSTED_ORIGINS = [
+    origine.strip()
+    for origine in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origine.strip()
+]
 
 
 # Application definition
@@ -61,6 +79,7 @@ LOGOUT_REDIRECT_URL = 'accounts:login'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -100,6 +119,12 @@ DATABASES = {
     }
 }
 
+# En production (Render, Heroku, Fly...), définir DATABASE_URL dans
+# l'environnement bascule automatiquement sur PostgreSQL.
+if os.environ.get('DATABASE_URL'):
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -138,6 +163,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Dossier de collecte (collectstatic) servi par whitenoise en production.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
